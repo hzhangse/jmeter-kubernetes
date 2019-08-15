@@ -9,7 +9,7 @@ data:
     #!/bin/bash
     #Script created to invoke jmeter test script with the slave POD IP addresses
     #Script should be run like: ./load_test "path to the test script in jmx format"
-    /jmeter/apache-jmeter-*/bin/jmeter -n -t $1 -Dserver.rmi.ssl.disable=true -R `getent ahostsv4 jmeter-slaves-svc | cut -d' ' -f1 | sort -u | awk -v ORS=, '{print $1}' | sed 's/,$//'`
+    /jmeter/apache-jmeter-5.0/bin/jmeter -t $1 -Dserver.rmi.ssl.disable=true -Jremote_hosts=`getent ahostsv4 jmeter-slaves-svc | cut -d' ' -f1 | sort -u | awk -v ORS=, '{print $1}' | sed 's/,$//'`
 ---
 kind: ConfigMap
 metadata:
@@ -114,11 +114,6 @@ spec:
       - name: jmmaster
         image: registry.cn-hangzhou.aliyuncs.com/iotbull/jemeter_master_desktop
         imagePullPolicy: Always
-       
-        volumeMounts:
-          - name: loadtest
-            mountPath: /load_test
-            subPath: "load_test"
         ports:
         - containerPort: 60000
         - name: http
@@ -134,7 +129,11 @@ spec:
           name: m2-volume             
         - name: configmap
           mountPath: /root/.bashrc  
-          subPath: path/to/.bashrc   
+          subPath: path/to/.bashrc
+        - name: loadtest
+          mountPath: /load_test
+          subPath: "load_test"          
+          
         securityContext:
           privileged: true
         env:
